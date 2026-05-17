@@ -6,10 +6,16 @@
  */
 
 import { EventEmitter } from "node:events";
-import { join } from "node:path";
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { throttle } from "throttle-debounce";
 import { screen, BrowserWindow } from "electron";
 import type { Rectangle, BrowserWindowConstructorOptions } from "electron";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const require = createRequire(import.meta.url);
 
 // Native addon
 
@@ -20,7 +26,26 @@ interface AddonExports {
   screenshot(): Buffer;
 }
 
-const lib: AddonExports = require("node-gyp-build")(join(__dirname, ".."));
+function loadNativeAddon(): AddonExports {
+  const roots = [
+    join(__dirname, "../../../../../"),
+    join(__dirname, "../../../../.."),
+    process.cwd(),
+    __dirname,
+  ];
+
+  for (const root of roots) {
+    try {
+      return require("node-gyp-build")(root) as AddonExports;
+    } catch {
+      // try next candidate
+    }
+  }
+
+  throw new Error("overlay_window native addon not found. Run npm install to build it.");
+}
+
+const lib: AddonExports = loadNativeAddon();
 
 //  Event type constants (must match overlay_window.h)
 

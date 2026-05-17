@@ -1,0 +1,10 @@
+.overlay-page {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+  background: transparent;
+  pointer-events: none;
+}
