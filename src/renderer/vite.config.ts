@@ -1,27 +1,17 @@
-import { dirname, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { defineConfig } from 'vite'
-import react, { reactCompilerPreset } from '@vitejs/plugin-react'
-import babel from '@rolldown/plugin-babel'
+import { defineConfig } from "vite";
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import babel from "@rolldown/plugin-babel";
+import tailwindcss from "@tailwindcss/vite";
+import path from "node:path";
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
+const __dirname = import.meta.dirname;
 
+// https://vite.dev/config/
 export default defineConfig({
-  root: __dirname,
-  plugins: [react(), babel({ presets: [reactCompilerPreset()] })],
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src'),
+      "@": path.resolve(__dirname, "./src"),
     },
   },
-  base: './',
-  build: {
-    outDir: resolve(__dirname, '../../dist/renderer'),
-    emptyOutDir: true,
-  },
-  server: {
-    host: '127.0.0.1',
-    port: 5173,
-    strictPort: true,
-  },
-})
+  plugins: [react(), babel({ presets: [reactCompilerPreset()] }), tailwindcss()],
+});
