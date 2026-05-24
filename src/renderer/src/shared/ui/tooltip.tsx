@@ -48,17 +48,17 @@ export const Tooltip = ({ content, placement = "bottom", maxWidth = 420, childre
   });
 
   const { getReferenceProps, getFloatingProps } = useInteractions([hover]);
-
+  const { setFloating, setReference } = refs;
   return (
     <>
-      <span className="inline-block" ref={refs.setReference} {...getReferenceProps()}>
+      <span className="inline-block" ref={setReference} {...getReferenceProps()}>
         {children}
       </span>
       <FloatingPortal id="tooltips">
         {isMounted && (
           <div
             data-testid="tooltip"
-            ref={refs.setFloating}
+            ref={setFloating}
             style={{
               position: strategy,
               top: y ?? 0,

@@ -60,9 +60,10 @@ export const Select = ({
   const btnClassName =
     btnClass ??
     "rounded-2xl w-full flex gap-2 justify-center items-center border-none text-foreground-primary cursor-pointer";
+  const { setFloating, setReference } = refs;
   return (
     <>
-      <button ref={refs.setReference} {...getReferenceProps()} className={btnClassName}>
+      <button ref={setReference} {...getReferenceProps()} className={btnClassName}>
         {prefix}
         {!noPlaceholder && <span>{value ? options.find((o) => o.value === value)?.label : placeholder}</span>}
         {children ? children : <ChevronDown height={18} width={18} className={isOpen ? "rotate-180" : ""} />}
@@ -71,7 +72,7 @@ export const Select = ({
       <FloatingPortal id="modals">
         {isMounted && (
           <ul
-            ref={refs.setFloating}
+            ref={setFloating}
             style={{ position: strategy, top: y ?? 0, left: x ?? 0, ...styles }}
             className="pointer-events-auto bg-background border border-stroke-separator text-foreground-primary text-sm rounded-2xl overflow-hidden m-0 list-none z-50 focus:outline-none"
             {...getFloatingProps()}

@@ -3,7 +3,7 @@ import { useRef, useState, type ChangeEvent, type KeyboardEvent, type SyntheticE
 
 export const InputMessage = () => {
   const [value, setValue] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
+  const [, setLoading] = useState<boolean>(false);
   const [isMultiLine, setIsMultiLine] = useState<boolean>(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isOverLimit = value.length > 50000;
@@ -15,7 +15,6 @@ export const InputMessage = () => {
       if (!value.trim() || isOverLimit) return;
 
       setLoading(true);
-      // FETCH
       setValue("");
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";

@@ -1,6 +1,5 @@
 import { EventEmitter } from "node:events";
 import { join, dirname } from "node:path";
-import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import { throttle } from "throttle-debounce";
@@ -16,7 +15,6 @@ const lib: AddonExports = require("node-gyp-build")(addonPath);
 
 interface AddonExports {
   start(overlayWindowId: Buffer | undefined, targetWindowTitle: string, cb: (e: any) => void): void;
-
   activateOverlay(): void;
   focusTarget(): void;
   screenshot(): Buffer;

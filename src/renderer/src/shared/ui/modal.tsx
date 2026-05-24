@@ -24,13 +24,14 @@ export const Modal = ({ title, children, isOpen, onOpenChange }) => {
 
   if (!isOpen) return null;
 
+  const { setFloating } = refs;
   return (
     <FloatingPortal id="modals">
       <FloatingOverlay lockScroll className="bg-basic-alpha flex items-center justify-center z-10 fixed inset-0">
         <FloatingFocusManager context={context}>
           <div className="relative flex items-center justify-center w-full h-full p-2">
             <div
-              ref={refs.setFloating}
+              ref={setFloating}
               aria-labelledby={headingId}
               aria-describedby={descriptionId}
               {...getFloatingProps()}
