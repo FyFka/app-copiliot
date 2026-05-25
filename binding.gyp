@@ -3,12 +3,11 @@
     {
       "target_name": "overlay_window",
       "sources": [
-        "src/main/shared/lib/overlay/napi/addon.c",
-        "src/main/shared/lib/overlay/napi/napi_helpers.c"
+        "src/main/shared/lib/overlay/lib/addon.c",
+        "src/main/shared/lib/overlay/lib/napi_helpers.c"
       ],
       "include_dirs": [
-        "src/main/shared/lib/overlay/napi",
-        "src/main/shared/lib/overlay/core"
+        "src/main/shared/lib/overlay/lib"
       ],
       "conditions": [
         ["OS=='win'", {
@@ -16,7 +15,7 @@
           "link_settings": {
             "libraries": ["oleacc.lib"]
           },
-          "sources": ["src/main/shared/lib/overlay/platform/windows/windows.c"]
+          "sources": ["src/main/shared/lib/overlay/lib/windows.c"]
         }],
         ["OS=='linux'", {
           "defines": ["_GNU_SOURCE"],
@@ -24,7 +23,7 @@
             "libraries": ["-lxcb", "-lpthread"]
           },
           "cflags": ["-std=c99", "-pedantic", "-Wall", "-pthread"],
-          "sources": ["src/main/shared/lib/overlay/platform/linux/x11.c"]
+          "sources": ["src/main/shared/lib/overlay/lib/x11.c"]
         }],
         ["OS=='mac'", {
           "link_settings": {
@@ -39,8 +38,8 @@
           },
           "cflags": ["-std=c99", "-pedantic", "-Wall", "-pthread"],
           "sources": [
-            "src/main/shared/lib/overlay/platform/mac/mac.mm",
-            "src/main/shared/lib/overlay/platform/mac/OWFullscreenObserver.m"
+            "src/main/shared/lib/overlay/lib/mac.mm",
+            "src/main/shared/lib/overlay/lib/mac/OWFullscreenObserver.m"
           ]
         }]
       ]

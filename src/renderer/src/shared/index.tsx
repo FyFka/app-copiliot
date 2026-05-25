@@ -4,3 +4,4 @@ export * from "./ui/select";
 export * from "./ui/input";
 export * from "./ui/tooltip";
 export * from "./lib/delay";
+export * from "./lib/copilot";

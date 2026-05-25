@@ -1,4 +1,4 @@
-#import "include/OWFullscreenObserver.h"
+#import "OWFullscreenObserver.h"
 
 @implementation OWFullscreenObserver
 
@@ -6,12 +6,11 @@
   self.fullscreenBlock = fullscreenBlock;
 }
 
-- (void)observeValueForKeyPath:(NSString *)keyPath
+- (void)observeValueForKeyPath:(NSString*)keyPath
                       ofObject:(id)object
-                        change:(NSDictionary<NSKeyValueChangeKey, id> *)change
-                       context:(void *)context {
+                        change:(NSDictionary<NSKeyValueChangeKey, id>*)change
+                       context:(void*)context {
   (void)keyPath; (void)object; (void)change; (void)context;
-
   if (self.fullscreenBlock) {
     self.fullscreenBlock();
   }

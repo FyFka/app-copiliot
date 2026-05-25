@@ -6,7 +6,7 @@
   "main": "dist/main/index.js",
   "type": "module",
   "scripts": {
-    "postinstall": "electron-rebuild -f -w overlay_window -w active-win",
+    "postinstall": "electron-rebuild -f",
     "dev": "npm run build:main && concurrently -k \"npm run dev:renderer\" \"npm run dev:electron\"",
     "dev:renderer": "vite --config src/renderer/vite.config.ts",
     "dev:electron": "wait-on http://127.0.0.1:5173 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .",
@@ -19,12 +19,12 @@
   "dependencies": {
     "active-win": "^8.2.1",
     "electron": "^35.1.2",
-    "node-global-key-listener": "^0.3.0",
     "node-gyp-build": "^4.8.4",
     "throttle-debounce": "^5.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
+    "@electron/rebuild": "^4.0.4",
     "@eslint/js": "^10.0.1",
     "@rolldown/plugin-babel": "^0.2.3",
     "@types/babel__core": "^7.20.5",
@@ -45,8 +45,7 @@
     "react-dom": "^19.2.5",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.58.2",
-    "vite": "^8.0.10",
-    "wait-on": "^8.0.3"
+    "vite": "^8.0.10"
   },
   "gypfile": true
 }

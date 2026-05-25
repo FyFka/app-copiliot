@@ -1,4 +1,5 @@
 import { Toaster } from "sonner";
+import { VisibleProvider } from "./visible-provider";
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -6,7 +7,7 @@ interface AppProvidersProps {
 
 export function AppProviders({ children }: AppProvidersProps) {
   return (
-    <>
+    <VisibleProvider>
       {children}
       <Toaster
         toastOptions={{
@@ -14,6 +15,6 @@ export function AppProviders({ children }: AppProvidersProps) {
         }}
         position="top-center"
       />
-    </>
+    </VisibleProvider>
   );
 }

@@ -8,10 +8,16 @@ const __dirname = import.meta.dirname;
 
 // https://vite.dev/config/
 export default defineConfig({
+  root: __dirname,
+  plugins: [react(), babel({ presets: [reactCompilerPreset()] }), tailwindcss()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  plugins: [react(), babel({ presets: [reactCompilerPreset()] }), tailwindcss()],
+  server: {
+    host: "127.0.0.1",
+    port: 5173,
+    strictPort: true,
+  },
 });
