@@ -9,7 +9,12 @@ const __dirname = import.meta.dirname;
 // https://vite.dev/config/
 export default defineConfig({
   root: __dirname,
+  base: "./",
   plugins: [react(), babel({ presets: [reactCompilerPreset()] }), tailwindcss()],
+  build: {
+    outDir: path.resolve(__dirname, "..", "..", "prebuild", "renderer"),
+    emptyOutDir: true,
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

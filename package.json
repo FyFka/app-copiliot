@@ -3,24 +3,43 @@
   "version": "0.1.0",
   "private": true,
   "description": "AI copilot overlay for any desktop application",
-  "main": "dist/main/index.js",
+  "main": "prebuild/main/index.js",
   "type": "module",
   "scripts": {
-    "postinstall": "electron-rebuild -f",
-    "dev": "npm run build:main && concurrently -k \"npm run dev:renderer\" \"npm run dev:electron\"",
     "dev:renderer": "vite --config src/renderer/vite.config.ts",
     "dev:electron": "wait-on http://127.0.0.1:5173 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .",
-    "build": "npm run build:renderer && npm run build:main",
+    "dev": "npm run build:main && concurrently -k \"npm run dev:renderer\" \"npm run dev:electron\"",
+    "prebuild": "electron-builder install-app-deps",
     "build:renderer": "vite build --config src/renderer/vite.config.ts",
     "build:main": "tsc -p tsconfig.main.json",
-    "start": "electron .",
-    "lint": "eslint src/renderer"
+    "build": "npm run build:renderer && npm run build:main",
+    "postbuild": "node scripts/move-native.js",
+    "release": "electron-builder --publish=never"
   },
   "dependencies": {
     "active-win": "^8.2.1",
-    "electron": "^35.1.2",
     "node-gyp-build": "^4.8.4",
     "throttle-debounce": "^5.0.2"
+  },
+  "build": {
+    "appId": "com.app.copilot",
+    "productName": "AppCopilot",
+    "asarUnpack": [
+      "**/*.node"
+    ],
+    "files": [
+      "prebuild/main/**/*",
+      "prebuild/renderer/**/*",
+      "prebuild/native/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    },
+    "win": {
+      "target": "nsis"
+    }
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
@@ -36,16 +55,19 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "concurrently": "^9.1.2",
     "cross-env": "^7.0.3",
-    "electron-rebuild": "^3.2.9",
+    "electron": "^42.2.0",
+    "electron-builder": "^26.8.1",
     "eslint": "^10.2.1",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.5.0",
+    "node-gyp": "^12.3.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.58.2",
-    "vite": "^8.0.10"
+    "vite": "^8.0.10",
+    "wait-on": "^9.0.10"
   },
   "gypfile": true
 }

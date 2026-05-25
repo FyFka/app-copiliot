@@ -1,6 +1,7 @@
 # build output
 dist/
 build/
+prebuild/
 
 # dependencies
 node_modules/

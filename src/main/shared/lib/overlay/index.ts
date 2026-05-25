@@ -11,16 +11,7 @@ const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-let addonPath = join(__dirname, "..");
-if (__dirname.includes("dist") && !existsSync(join(addonPath, "build")) && !existsSync(join(addonPath, "prebuilds"))) {
-  const srcPath = join(__dirname, "../../../../../src/main/shared/lib");
-  if (existsSync(join(srcPath, "build")) || existsSync(join(srcPath, "prebuilds"))) {
-    addonPath = srcPath;
-  } else {
-    addonPath = join(__dirname, "../../../../..");
-  }
-}
-
+let addonPath = join(__dirname, "..", "..", "..", "..", "native");
 const lib: AddonExports = require("node-gyp-build")(addonPath);
 
 interface AddonExports {

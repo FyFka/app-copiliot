@@ -2,6 +2,7 @@
   "targets": [
     {
       "target_name": "overlay_window",
+      "msbuild_toolset": "v143",
       "sources": [
         "src/main/shared/lib/overlay/lib/addon.c",
         "src/main/shared/lib/overlay/lib/napi_helpers.c"

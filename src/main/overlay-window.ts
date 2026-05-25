@@ -1,7 +1,8 @@
-import { BrowserWindow, globalShortcut, ipcMain } from "electron";
+import { app, BrowserWindow, globalShortcut, ipcMain } from "electron";
 import { OverlayController, OVERLAY_WINDOW_OPTS } from "./shared/lib/overlay/index.js";
 import path, { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import fs from "node:fs";
 import activeWin from "active-win";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -53,8 +54,18 @@ export class OverlayWindow {
   }
 
   loadApp() {
-    const url = `http://localhost:5173/index.html`;
-    this.window.loadURL(url);
+    if (app.isPackaged) {
+      const indexPath = path.join(__dirname, "..", "renderer", "index.html");
+      console.log("Loading file:", indexPath);
+
+      this.window.loadFile(indexPath).catch((err) => {
+        console.error("Failed to load file:", err);
+      });
+    } else {
+      this.window.loadURL("http://127.0.0.1:5173/");
+    }
+
+    this.window.webContents.openDevTools({ mode: "detach" });
   }
 
   registerShortCuts() {
@@ -76,7 +87,6 @@ export class OverlayWindow {
   }
 
   attachOnWindow(windowTitle: string) {
-    console.log(windowTitle);
     OverlayController.attachByTitle(this.window, windowTitle, { hasTitleBarOnMac: true });
   }
 }
