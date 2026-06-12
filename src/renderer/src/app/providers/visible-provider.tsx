@@ -6,7 +6,6 @@ export const VisibleProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const cleanup = window.copilot.onVisibilityChange(() => {
-      console.log("renderer received visibility-change"); // verify this fires
       setIsVisible((prev) => !prev);
     });
 

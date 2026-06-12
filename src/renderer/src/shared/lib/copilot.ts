@@ -1,8 +1,8 @@
 import type { CopilotApi } from "../model/types";
 
-function getApi(): CopilotApi | undefined {
+const getApi = (): CopilotApi | undefined => {
   return window.copilot;
-}
+};
 
 export const copilotApi = {
   setClickThrough(enabled: boolean): Promise<void> {

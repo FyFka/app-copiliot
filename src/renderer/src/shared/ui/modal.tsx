@@ -1,3 +1,5 @@
+import { type ReactNode } from "react";
+
 import {
   FloatingFocusManager,
   FloatingOverlay,
@@ -11,7 +13,14 @@ import {
 } from "@floating-ui/react";
 import { X } from "lucide-react";
 
-export const Modal = ({ title, children, isOpen, onOpenChange }) => {
+interface ModalProps {
+  title?: ReactNode;
+  children: ReactNode;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export const Modal = ({ title, children, isOpen, onOpenChange }: ModalProps) => {
   const headingId = useId();
   const descriptionId = useId();
 

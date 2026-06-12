@@ -5,7 +5,7 @@ interface AppProvidersProps {
   children: React.ReactNode;
 }
 
-export function AppProviders({ children }: AppProvidersProps) {
+export const AppProviders = ({ children }: AppProvidersProps) => {
   return (
     <VisibleProvider>
       {children}
@@ -17,4 +17,4 @@ export function AppProviders({ children }: AppProvidersProps) {
       />
     </VisibleProvider>
   );
-}
+};

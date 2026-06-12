@@ -15,9 +15,9 @@ export interface ChatResponse {
 }
 
 export interface CopilotApi {
-  setClickThrough(enabled: boolean): Promise<void>;
-  onVisibilityChange(callback: () => void): () => void;
-  ask(payload: ChatPayload): Promise<ChatResponse>;
+  setClickThrough: (enabled: boolean) => Promise<void>;
+  onVisibilityChange: (callback: () => void) => () => void;
+  ask: (payload: ChatPayload) => Promise<ChatResponse>;
 }
 
 declare global {

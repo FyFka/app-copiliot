@@ -1,78 +1,80 @@
-import { SendHorizonalIcon } from "lucide-react";
-import { useRef, useState, type ChangeEvent, type KeyboardEvent, type SyntheticEvent } from "react";
+import { SendHorizonalIcon, Loader2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { type Message, useSettingsStore } from "@/shared";
+import { toast } from "sonner";
 
-export const InputMessage = () => {
-  const [value, setValue] = useState<string>("");
-  const [, setLoading] = useState<boolean>(false);
-  const [isMultiLine, setIsMultiLine] = useState<boolean>(false);
+interface InputMessageProps {
+  messages: Message[];
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+}
+
+export const InputMessage = ({ messages, setMessages }: InputMessageProps) => {
+  const [value, setValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { apiKey, model } = useSettingsStore();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const isOverLimit = value.length > 50000;
 
-  const handleSubmit = async (e: SyntheticEvent<HTMLFormElement> | KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!value.trim() || isLoading) return;
+    if (!apiKey) {
+      toast.error("Please enter API Key in settings");
+      return;
+    }
+
+    const userMessage: Message = { role: "user", content: value };
+    const newMessages = [...messages, userMessage];
+
+    setMessages(newMessages);
+    setValue("");
+    setIsLoading(true);
+
     try {
-      e.preventDefault();
+      const result = await window.copilot.ask({ messages: newMessages, model, apiKey });
 
-      if (!value.trim() || isOverLimit) return;
-
-      setLoading(true);
-      setValue("");
-      if (textareaRef.current) {
-        textareaRef.current.style.height = "auto";
-        setIsMultiLine(false);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        setMessages([...newMessages, { role: "assistant", content: result.content }]);
       }
     } catch (err: unknown) {
       console.log(err);
+      toast.error("Failed to connect to AI");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
+      if (textareaRef.current) textareaRef.current.style.height = "auto";
     }
   };
-
-  const handleInput = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    setValue(e.target.value);
-    const el = e.target;
-
-    el.style.height = "auto";
-    const currentHeight = el.scrollHeight;
-
-    el.style.height = `${Math.min(currentHeight, 250)}px`;
-
-    setIsMultiLine(currentHeight > 55);
-  };
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
-    }
-  };
-
-  const btnProps = isOverLimit || !value.trim() ? { disabled: true, title: "Invalid message" } : {};
 
   return (
-    <div
-      className={`border border-stroke-separator rounded-2xl transition-colors ${isOverLimit ? "border-red-500" : ""}`}
-    >
-      <form onSubmit={handleSubmit} className={`flex ${isMultiLine ? "flex-col" : "flex-row items-end"} p-2 gap-2`}>
+    <div className="border border-stroke-separator rounded-2xl p-2 bg-background">
+      <form onSubmit={handleSubmit} className="flex items-end gap-2">
         <textarea
           ref={textareaRef}
           value={value}
-          onChange={handleInput}
-          onKeyDown={handleKeyDown}
-          placeholder="Ask anything"
+          onChange={(e) => {
+            setValue(e.target.value);
+            e.target.style.height = "auto";
+            e.target.style.height = e.target.scrollHeight + "px";
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handleSubmit(e);
+            }
+          }}
+          placeholder="Ask anything..."
           rows={1}
-          name="message"
-          className="w-full p-2 text-white bg-transparent outline-none resize-none block text-sm"
+          className="w-full p-2 text-white bg-transparent outline-none resize-none text-sm max-h-32"
         />
-
-        <div className={`flex ${isMultiLine ? "w-full justify-end" : ""}`}>
-          <button
-            className="p-2.5 text-foreground border border-stroke-separator rounded-full cursor-pointer z-10 bg-white opacity-90 disabled:opacity-50"
-            type="submit"
-            {...btnProps}
-          >
-            <SendHorizonalIcon size={16} />
-          </button>
-        </div>
+        <button
+          disabled={isLoading || !value.trim()}
+          className="p-2.5 text-background bg-white rounded-full disabled:opacity-50 transition-opacity"
+          type="submit"
+        >
+          {isLoading ? <Loader2 className="animate-spin" size={16} /> : <SendHorizonalIcon size={16} />}
+        </button>
       </form>
     </div>
   );

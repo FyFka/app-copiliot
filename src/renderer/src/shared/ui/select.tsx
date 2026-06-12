@@ -11,8 +11,25 @@ import {
   useInteractions,
   useTransitionStyles,
 } from "@floating-ui/react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
+
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
+interface SelectProps {
+  options: SelectOption[];
+  value: string;
+  onChange: (value: string) => void;
+  prefix?: ReactNode;
+  btnClass?: string;
+  placeholder?: string;
+  children?: ReactNode;
+  autoWidth?: boolean;
+  noPlaceholder?: boolean;
+}
 
 export const Select = ({
   options,
@@ -24,7 +41,7 @@ export const Select = ({
   children,
   autoWidth = false,
   noPlaceholder = false,
-}) => {
+}: SelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { x, y, refs, strategy, context } = useFloating({
     open: isOpen,

@@ -1,8 +1,8 @@
 import { app, BrowserWindow, globalShortcut, ipcMain } from "electron";
-import { OverlayController, OVERLAY_WINDOW_OPTS } from "./shared/lib/overlay/index.js";
+import { OverlayController, OVERLAY_WINDOW_OPTS } from "./shared/lib/overlay/index";
+import type { ChatPayload, ChatResponse } from "./types";
 import path, { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import fs from "node:fs";
 import activeWin from "active-win";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -50,6 +50,61 @@ export class OverlayWindow {
   setupIpc() {
     ipcMain.handle("set-click-through", (e, enabled) => {
       this.window.setIgnoreMouseEvents(enabled);
+    });
+
+    ipcMain.handle("ask-ai", async (event, payload: ChatPayload): Promise<ChatResponse> => {
+      const { messages, model, apiKey } = payload;
+      try {
+        if (model.startsWith("gemini")) {
+          const modelId = model.includes("/") ? model.split("/").pop() : model;
+
+          const contents = messages
+            .filter((m: any) => m.role !== "system")
+            .map((m: any) => ({
+              role: m.role === "assistant" ? "model" : "user",
+              parts: [{ text: m.content }],
+            }));
+
+          const url = `https://generativelanguage.googleapis.com/v1/models/${modelId}:generateContent?key=${apiKey}`;
+
+          const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: contents,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok || data.error) {
+            console.error("Gemini Raw Error:", data);
+            throw new Error(data.error?.message || `API Error: ${response.status}`);
+          }
+
+          const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No response";
+          return { content: resultText };
+        } else {
+          const response = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+              model: model,
+              messages: messages,
+            }),
+          });
+
+          const data = await response.json();
+          if (data.error) throw new Error(data.error.message);
+          return { content: data.choices[0].message.content };
+        }
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        return { content: "", error: errorMessage };
+      }
     });
   }
 

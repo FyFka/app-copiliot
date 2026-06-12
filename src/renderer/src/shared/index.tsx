@@ -5,3 +5,5 @@ export * from "./ui/input";
 export * from "./ui/tooltip";
 export * from "./lib/delay";
 export * from "./lib/copilot";
+export * from "./lib/use-settings-store";
+export * from "./model/types";

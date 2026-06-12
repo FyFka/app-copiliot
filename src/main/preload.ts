@@ -1,11 +1,16 @@
 import { contextBridge, ipcRenderer } from "electron";
+import type { ChatPayload, CopilotApi } from "./types";
 
-contextBridge.exposeInMainWorld("copilot", {
+const api: CopilotApi = {
   onVisibilityChange: (callback: () => void) => {
-    const handler = (_event: Electron.IpcRendererEvent) => callback();
+    const handler = () => callback();
     ipcRenderer.on("visibility-change", handler);
-
-    return () => ipcRenderer.removeListener("visibility-change", handler);
+    return () => {
+      ipcRenderer.removeListener("visibility-change", handler);
+    };
   },
   setClickThrough: (enabled: boolean) => ipcRenderer.invoke("set-click-through", enabled),
-});
+  ask: (payload: ChatPayload) => ipcRenderer.invoke("ask-ai", payload),
+};
+
+contextBridge.exposeInMainWorld("copilot", api);

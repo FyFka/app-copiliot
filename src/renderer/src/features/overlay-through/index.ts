@@ -1,1 +1,1 @@
-export { useOverlayThrough } from "./model/use-overlay-through";
+export * from "./model/use-overlay-through";

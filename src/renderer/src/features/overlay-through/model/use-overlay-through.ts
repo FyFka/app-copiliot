@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { copilotApi } from "@/shared";
 
-export function useOverlayThrough(panelWidth: number) {
+export const useOverlayThrough = (panelWidth: number) => {
   const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
       const inPanel = event.clientX >= window.innerWidth - panelWidth;
@@ -15,4 +15,4 @@ export function useOverlayThrough(panelWidth: number) {
   }, []);
 
   return { handlePointerMove, handlePointerLeave };
-}
+};

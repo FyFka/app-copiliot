@@ -10,10 +10,18 @@ import {
   useInteractions,
   useTransitionStyles,
   safePolygon,
+  type Placement,
 } from "@floating-ui/react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
-export const Tooltip = ({ content, placement = "bottom", maxWidth = 420, children }) => {
+interface TooltipProps {
+  content: ReactNode;
+  placement?: Placement;
+  maxWidth?: number;
+  children: ReactNode;
+}
+
+export const Tooltip = ({ content, placement = "bottom", maxWidth = 420, children }: TooltipProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { x, y, refs, strategy, context } = useFloating({
     open: isOpen,

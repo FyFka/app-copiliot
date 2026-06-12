@@ -1,5 +1,14 @@
-export const Input = ({ placeholder, value, onChange, children, label, type }) => {
-  const hasValue = value !== "" && value !== undefined && value !== null;
+interface InputProps {
+  placeholder?: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  children?: React.ReactNode;
+  label?: string;
+  type?: string;
+}
+
+export const Input = ({ placeholder, value, onChange, children, label, type = "text" }: InputProps) => {
+  const hasValue = value !== "" && value !== undefined;
   return (
     <label className="w-full">
       <div className="pl-3 bg-secondary-background rounded-2xl flex gap-2 relative">
