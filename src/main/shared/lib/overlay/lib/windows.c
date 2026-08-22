@@ -24,6 +24,10 @@ struct ow_overlay_window {
 };
 
 static HWND            foreground_window            = NULL;
+static bool            hook_started                 = false;
+// Set when ow_start_hook is called again with a new title; consumed by the
+// foreground timer so the re-check runs on the hook thread that owns the hooks.
+static volatile bool   retarget_pending             = false;
 static HWINEVENTHOOK   fg_window_namechange_hook    = NULL;
 static UINT            WM_OVERLAY_UIPI_TEST         = WM_NULL;
 
@@ -161,6 +165,12 @@ static void check_and_handle_window(HWND hwnd, struct ow_target_window* t) {
     return;
   }
 
+  // Our own overlay coming to the foreground (e.g. when the user makes it
+  // interactive) must not blur or detach the window we are attached to.
+  if (hwnd != NULL && hwnd == overlay_info.hwnd) {
+    return;
+  }
+
   if (t->hwnd != NULL) {
     if (t->hwnd != hwnd) {
       if (t->is_focused) {
@@ -191,7 +201,7 @@ static void check_and_handle_window(HWND hwnd, struct ow_target_window* t) {
   if (!get_title(hwnd, &title) || title == NULL) {
     return;
   }
-  bool is_equal = (strcmp(title, t->title) == 0);
+  bool is_equal = (t->title != NULL && strcmp(title, t->title) == 0);
   free(title);
   if (!is_equal) {
     return;
@@ -299,6 +309,16 @@ static VOID CALLBACK foreground_timer_proc(
   (void)_hwnd; (void)msg; (void)timerId; (void)dwmsEventTime;
 
   HWND system_foreground = GetForegroundWindow();
+
+  // A retarget swapped the title out from under us. The foreground window is
+  // usually already cached as current, so force a re-evaluation against the new
+  // title instead of waiting for the next focus change.
+  if (retarget_pending) {
+    retarget_pending = false;
+    handle_new_foreground(system_foreground);
+    return;
+  }
+
   if (foreground_window != system_foreground &&
       MSAA_check_window_focused_state(system_foreground)) {
     handle_new_foreground(system_foreground);
@@ -341,13 +361,31 @@ static void hook_thread(void* _arg) {
 // Public API
 // ---------------------------------------------------------------------------
 
+// Safe to call repeatedly: the first call starts the hook thread, later calls
+// only swap the target title. Spawning a thread per call would leak a thread,
+// a message loop and a set of WinEvent hooks on every window switch.
 void ow_start_hook(char* target_window_title, void* overlay_window_id) {
+  // The hook thread reads target_info.title inside a single strcmp, so the
+  // pointer it may be holding is only the one from the previous call. Freeing
+  // one generation late keeps that read valid without taking a lock; retargets
+  // arrive at most once per foreground change, far apart in practice.
+  static char* retired_title = NULL;
+  char* previous_title = target_info.title;
   target_info.title = target_window_title;
+  free(retired_title);
+  retired_title = previous_title;
+
   if (overlay_window_id != NULL) {
     overlay_info.hwnd = *((HWND*)overlay_window_id);
   }
   WM_OVERLAY_UIPI_TEST = RegisterWindowMessage("ELECTRON_OVERLAY_UIPI_TEST");
-  uv_thread_create(&hook_tid, hook_thread, NULL);
+
+  if (!hook_started) {
+    hook_started = true;
+    uv_thread_create(&hook_tid, hook_thread, NULL);
+  } else {
+    retarget_pending = true;
+  }
 }
 
 void ow_activate_overlay(void) {

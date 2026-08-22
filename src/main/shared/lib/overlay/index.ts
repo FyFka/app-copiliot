@@ -10,8 +10,18 @@ const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-let addonPath = join(__dirname, "..", "..", "..", "..", "native");
-const lib: AddonExports = require("node-gyp-build")(addonPath);
+const addonPath = join(__dirname, "..", "..", "..", "..", "native");
+
+// The addon is optional: without it the overlay cannot follow a specific window,
+// but a plain always-on-top panel is far better than refusing to start.
+let lib: AddonExports | null = null;
+try {
+  lib = require("node-gyp-build")(addonPath) as AddonExports;
+} catch (error) {
+  console.error("overlay: native addon unavailable — falling back to a full-screen always-on-top panel", error);
+}
+
+export const hasNativeOverlay = (): boolean => lib !== null;
 
 interface AddonExports {
   start(overlayWindowId: Buffer | undefined, targetWindowTitle: string, cb: (e: any) => void): void;
@@ -216,13 +226,25 @@ class OverlayControllerGlobal {
     return newBounds;
   }
 
+  /** Without the addon, cover the work area of the display holding the cursor. */
+  private showFallbackOverlay() {
+    if (!this.electronWindow) return;
+    const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+    this.targetBounds = display.workArea;
+    this.electronWindow.setBounds(display.workArea);
+    if (!this.electronWindow.isVisible()) {
+      this.electronWindow.showInactive();
+      this.electronWindow.setAlwaysOnTop(true, "screen-saver");
+    }
+  }
+
   activateOverlay() {
     if (!this.electronWindow) {
       throw new Error("You are using the library in tracking mode");
     }
     this.focusNext = "overlay";
     this.electronWindow.setIgnoreMouseEvents(false);
-    if (isLinux) {
+    if (isLinux && lib) {
       lib.activateOverlay();
     } else {
       this.electronWindow.focus();
@@ -231,8 +253,12 @@ class OverlayControllerGlobal {
 
   focusTarget() {
     this.focusNext = "target";
-    this.electronWindow?.setIgnoreMouseEvents(true);
-    lib.focusTarget();
+    this.electronWindow?.setIgnoreMouseEvents(true, { forward: true });
+    if (lib) {
+      lib.focusTarget();
+    } else {
+      this.electronWindow?.blur();
+    }
   }
 
   attachByTitle(electronWindow: BrowserWindow | undefined, targetWindowTitle: string, options: AttachOptions = {}) {
@@ -242,6 +268,15 @@ class OverlayControllerGlobal {
 
     this.electronWindow?.removeAllListeners("blur");
     this.electronWindow?.removeAllListeners("focus");
+
+    this.attachOptions = options;
+
+    if (!lib) {
+      // No native focus events arrive in this mode, so hiding on blur would
+      // make the panel disappear for good the first time it loses focus.
+      this.showFallbackOverlay();
+      return;
+    }
 
     this.electronWindow?.on("blur", () => {
       if (!this.targetHasFocus && this.focusNext !== "target") {
@@ -253,17 +288,21 @@ class OverlayControllerGlobal {
       this.focusNext = undefined;
     });
 
-    this.attachOptions = options;
     if (isMac) {
       this.calculateMacTitleBarHeight();
     }
 
+    // Safe to call on every target change: the addon starts its hook thread
+    // once and only swaps the tracked title on later calls.
     lib.start(this.electronWindow?.getNativeWindowHandle(), targetWindowTitle, this.handler.bind(this));
   }
 
   screenshot(): Buffer {
     if (process.platform !== "win32") {
       throw new Error("Not implemented on your platform.");
+    }
+    if (!lib) {
+      throw new Error("The native overlay addon is not available.");
     }
     return lib.screenshot();
   }

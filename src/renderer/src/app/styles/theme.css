@@ -21,3 +21,24 @@ body,
   scrollbar-width: thin;
   scrollbar-color: rgba(90, 90, 90, 0.3) transparent;
 }
+
+/*
+ * The overlay window is transparent and covers the whole target window, so the
+ * document itself must never paint a background — otherwise the app underneath
+ * disappears behind an opaque black sheet.
+ */
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+/* Floating-ui portals sit outside the panel subtree; they still need to be
+   clickable while the rest of the overlay passes clicks through. */
+#modals,
+#tooltips {
+  pointer-events: auto;
+}

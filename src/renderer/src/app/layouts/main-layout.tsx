@@ -2,7 +2,9 @@ import { Outlet } from "react-router-dom";
 
 export const MainLayout = () => {
   return (
-    <div className="h-dvh mx-auto my-0 flex flex-col">
+    // pointer-events-none keeps document.elementFromPoint from reporting the
+    // full-screen shell as interactive, so only the panel blocks click-through.
+    <div className="h-dvh w-dvw flex flex-col pointer-events-none">
       <div className="flex grow flex-col relative overflow-hidden">
         <Outlet />
       </div>

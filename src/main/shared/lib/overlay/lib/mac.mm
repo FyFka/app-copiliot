@@ -396,7 +396,7 @@ static void checkAndHandleWindow(pid_t pid, AXUIElementRef frontmostWindow) {
 
   // The rest only applies if the title matches.
   NSString* title = getTitleForWindow(frontmostWindow);
-  if (!title || ![title isEqualToString:@(targetInfo.title)]) {
+  if (!title || !targetInfo.title || ![title isEqualToString:@(targetInfo.title)]) {
     return;
   }
 
@@ -495,16 +495,30 @@ static void hookThread(void* _arg) {
 // Public API
 // ---------------------------------------------------------------------------
 
+// Safe to call repeatedly: the first call starts the hook thread, later calls
+// only swap the target title (picked up on the next focus change). Spawning a
+// thread per call would leak one on every window switch.
 void ow_start_hook(char* target_window_title, void* overlay_window_id) {
-  // target_window_title is malloc'd in addon.c and owned by targetInfo.
+  static bool hookStarted = false;
+  static char* retiredTitle = NULL;
+
+  // target_window_title is malloc'd in addon.c and owned by targetInfo. Freed
+  // one generation late so the hook thread cannot be reading the pointer we are
+  // replacing. See the Windows backend for the same reasoning.
+  char* previousTitle = targetInfo.title;
   targetInfo.title = target_window_title;
+  free(retiredTitle);
+  retiredTitle = previousTitle;
 
   if (overlay_window_id != NULL) {
     NSView* __weak overlayView = *(NSView* __weak*)(overlay_window_id);
     overlayInfo.window = [overlayView window];
   }
 
-  uv_thread_create(&hook_tid, hookThread, NULL);
+  if (!hookStarted) {
+    hookStarted = true;
+    uv_thread_create(&hook_tid, hookThread, NULL);
+  }
 }
 
 void ow_activate_overlay(void) {

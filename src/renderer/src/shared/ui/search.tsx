@@ -1,5 +1,5 @@
 import { SearchIcon } from "lucide-react";
-import { debounce } from "@/shared";
+import { debounce } from "../lib/delay";
 import { useMemo, type ChangeEvent } from "react";
 
 interface SearchProps {

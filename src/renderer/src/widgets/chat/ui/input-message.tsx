@@ -1,80 +1,79 @@
-import { SendHorizonalIcon, Loader2 } from "lucide-react";
+import { SendHorizonalIcon, Square } from "lucide-react";
 import { useRef, useState } from "react";
-import { type Message, useSettingsStore } from "@/shared";
-import { toast } from "sonner";
 
 interface InputMessageProps {
-  messages: Message[];
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+  isLoading: boolean;
+  onSend: (text: string) => void;
+  onStop: () => void;
 }
 
-export const InputMessage = ({ messages, setMessages }: InputMessageProps) => {
+const MAX_HEIGHT_PX = 128;
+
+export const InputMessage = ({ isLoading, onSend, onStop }: InputMessageProps) => {
   const [value, setValue] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { apiKey, model } = useSettingsStore();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const resize = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.min(textarea.scrollHeight, MAX_HEIGHT_PX)}px`;
+  };
 
+  const submit = () => {
     if (!value.trim() || isLoading) return;
-    if (!apiKey) {
-      toast.error("Please enter API Key in settings");
-      return;
-    }
-
-    const userMessage: Message = { role: "user", content: value };
-    const newMessages = [...messages, userMessage];
-
-    setMessages(newMessages);
+    onSend(value);
     setValue("");
-    setIsLoading(true);
-
-    try {
-      const result = await window.copilot.ask({ messages: newMessages, model, apiKey });
-
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        setMessages([...newMessages, { role: "assistant", content: result.content }]);
-      }
-    } catch (err: unknown) {
-      console.log(err);
-      toast.error("Failed to connect to AI");
-    } finally {
-      setIsLoading(false);
-      if (textareaRef.current) textareaRef.current.style.height = "auto";
-    }
+    // Height is set imperatively, so it has to be reset the same way.
+    requestAnimationFrame(resize);
   };
 
   return (
     <div className="border border-stroke-separator rounded-2xl p-2 bg-background">
-      <form onSubmit={handleSubmit} className="flex items-end gap-2">
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          submit();
+        }}
+        className="flex items-end gap-2"
+      >
         <textarea
           ref={textareaRef}
           value={value}
-          onChange={(e) => {
-            setValue(e.target.value);
-            e.target.style.height = "auto";
-            e.target.style.height = e.target.scrollHeight + "px";
+          onChange={(event) => {
+            setValue(event.target.value);
+            resize();
           }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              handleSubmit(e);
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault();
+              submit();
             }
           }}
           placeholder="Ask anything..."
           rows={1}
-          className="w-full p-2 text-white bg-transparent outline-none resize-none text-sm max-h-32"
+          className="w-full p-2 text-foreground-primary bg-transparent outline-none resize-none text-sm"
         />
-        <button
-          disabled={isLoading || !value.trim()}
-          className="p-2.5 text-background bg-white rounded-full disabled:opacity-50 transition-opacity"
-          type="submit"
-        >
-          {isLoading ? <Loader2 className="animate-spin" size={16} /> : <SendHorizonalIcon size={16} />}
-        </button>
+
+        {isLoading ? (
+          <button
+            type="button"
+            onClick={onStop}
+            aria-label="Stop generating"
+            className="p-2.5 text-background bg-white rounded-full transition-opacity cursor-pointer"
+          >
+            <Square size={16} />
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={!value.trim()}
+            aria-label="Send message"
+            className="p-2.5 text-background bg-white rounded-full disabled:opacity-50 transition-opacity cursor-pointer"
+          >
+            <SendHorizonalIcon size={16} />
+          </button>
+        )}
       </form>
     </div>
   );

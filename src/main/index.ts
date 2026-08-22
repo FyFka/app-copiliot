@@ -1,20 +1,37 @@
-import { app, Tray, Menu, nativeImage } from "electron";
+import { app, globalShortcut, Tray } from "electron";
 import { OverlayWindow } from "./overlay-window.js";
+import { SettingsStore } from "./settings.js";
+import { createTray } from "./tray.js";
 
-let tray: Tray | null = null;
+// A second instance would fight the first one over the global shortcuts and the
+// settings file, so hand focus back to the original and exit.
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+} else {
+  let tray: Tray | null = null;
+  let overlay: OverlayWindow | null = null;
 
-app.on("ready", () => {
-  const icon = nativeImage.createEmpty();
-  tray = new Tray(icon);
-  const contextMenu = Menu.buildFromTemplate([{ label: "Quit", click: () => app.quit() }]);
-  tray.setToolTip("Electron Overlay");
-  tray.setContextMenu(contextMenu);
+  app.on("second-instance", () => overlay?.setVisible(true));
 
-  const overlay = new OverlayWindow();
-  overlay.loadApp();
-  overlay.startTracking();
-});
+  app.on("ready", () => {
+    app.setAppUserModelId("com.app.copilot");
 
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
-});
+    const settings = new SettingsStore();
+    overlay = new OverlayWindow(settings);
+    overlay.loadApp();
+    overlay.startTracking();
+
+    tray = createTray(overlay);
+  });
+
+  // This is a tray-resident app: closing or hiding the overlay must not quit it.
+  app.on("window-all-closed", () => {});
+
+  app.on("will-quit", () => {
+    globalShortcut.unregisterAll();
+    overlay?.destroy();
+    overlay = null;
+    tray?.destroy();
+    tray = null;
+  });
+}

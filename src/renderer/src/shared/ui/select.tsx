@@ -78,11 +78,16 @@ export const Select = ({
     btnClass ??
     "rounded-2xl w-full flex gap-2 justify-center items-center border-none text-foreground-primary cursor-pointer";
   const { setFloating, setReference } = refs;
+  // A stored value can outlive the option list (a renamed model, a provider that
+  // no longer offers it), so fall back to the raw value rather than rendering an
+  // empty button.
+  const selectedLabel = options.find((option) => option.value === value)?.label || value || placeholder;
+
   return (
     <>
       <button ref={setReference} {...getReferenceProps()} className={btnClassName}>
         {prefix}
-        {!noPlaceholder && <span>{value ? options.find((o) => o.value === value)?.label : placeholder}</span>}
+        {!noPlaceholder && <span className="truncate">{selectedLabel}</span>}
         {children ? children : <ChevronDown height={18} width={18} className={isOpen ? "rotate-180" : ""} />}
       </button>
 

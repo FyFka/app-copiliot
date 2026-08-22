@@ -27,11 +27,20 @@ jobs:
       - name: Install deps
         run: yarn install --frozen-lockfile
 
+      - name: Lint
+        run: yarn lint
+
+      - name: Typecheck
+        run: yarn typecheck
+
       - name: Rebuild native
         run: npx electron-rebuild
 
       - name: Build
         run: yarn build
+
+      - name: Test
+        run: yarn test
 
       - name: Package
         run: yarn release
@@ -46,7 +55,7 @@ jobs:
           tag_name: build-${{ github.run_number }}
           name: Build ${{ github.run_number }}
           files: |
-            dist/**/*.exe
+            dist/*.exe
             dist/win-unpacked.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

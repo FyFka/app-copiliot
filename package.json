@@ -17,6 +17,8 @@
     "postbuild": "node scripts/move-native.js",
     "release": "electron-builder --publish=never",
     "lint": "cd src/renderer && yarn run lint",
+    "typecheck": "tsc -p tsconfig.main.json --noEmit && cd src/renderer && tsc -b --force",
+    "test": "node scripts/test-chat-stream.mjs",
     "prepare": "husky"
   },
   "dependencies": {
@@ -34,6 +36,7 @@
       "prebuild/main/**/*",
       "prebuild/renderer/**/*",
       "prebuild/native/**/*",
+      "assets/**/*",
       "node_modules/**/*",
       "package.json"
     ],
@@ -41,7 +44,8 @@
       "buildResources": "assets"
     },
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "assets/icon.png"
     }
   },
   "devDependencies": {

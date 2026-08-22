@@ -6,4 +6,5 @@ export * from "./ui/tooltip";
 export * from "./lib/delay";
 export * from "./lib/copilot";
 export * from "./lib/use-settings-store";
+export * from "./lib/use-active-window";
 export * from "./model/types";

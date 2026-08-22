@@ -40,7 +40,7 @@
           "cflags": ["-std=c99", "-pedantic", "-Wall", "-pthread"],
           "sources": [
             "src/main/shared/lib/overlay/lib/mac.mm",
-            "src/main/shared/lib/overlay/lib/mac/OWFullscreenObserver.m"
+            "src/main/shared/lib/overlay/lib/mac/OWFullscreenObserver.mm"
           ]
         }]
       ]

@@ -191,7 +191,7 @@ static void check_and_handle_window(xcb_window_t wid, struct ow_target_window* t
   if (!get_title(wid, &title) || title == NULL) {
     return;
   }
-  bool is_equal = (strcmp(title, t->title) == 0);
+  bool is_equal = (t->title != NULL && strcmp(title, t->title) == 0);
   free(title);
   if (!is_equal) {
     return;
@@ -339,12 +339,28 @@ static void hook_thread(void* _arg) {
 // Public API
 // ---------------------------------------------------------------------------
 
+// Safe to call repeatedly: the first call starts the hook thread, later calls
+// only swap the target title (picked up on the next focus change). Spawning a
+// thread per call would leak one on every window switch.
 void ow_start_hook(char* target_window_title, void* overlay_window_id) {
+  static bool hook_started = false;
+  static char* retired_title = NULL;
+
+  // Freed one generation late so the hook thread cannot be reading the pointer
+  // we are replacing. See the Windows backend for the same reasoning.
+  char* previous_title = target_info.title;
   target_info.title = target_window_title;
+  free(retired_title);
+  retired_title = previous_title;
+
   if (overlay_window_id != NULL) {
     overlay_info.window_id = *((xcb_window_t*)overlay_window_id);
   }
-  uv_thread_create(&hook_tid, hook_thread, NULL);
+
+  if (!hook_started) {
+    hook_started = true;
+    uv_thread_create(&hook_tid, hook_thread, NULL);
+  }
 }
 
 void ow_activate_overlay(void) {
